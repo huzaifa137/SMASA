@@ -1017,6 +1017,66 @@ class Helper extends Controller
         ];
     }
 
+    /**
+     * Report-card HEADER LAYOUT (school name / motto / contact line).
+     *
+     *   hdr_name_align    left | center | right   — school name (and its Arabic line)
+     *   hdr_motto_align   left | center | right   — motto line
+     *   hdr_details_align left | center | right   — phone / email / location line
+     *   hdr_name_scale    0.8 – 1.8               — multiplier on the template's own
+     *                                               school-name font size
+     *
+     * Resolution order for every key: query string (live preview) -> the
+     * class's saved profile ($saved, i.e. $savedCfg in the slip views, so a
+     * bulk print of several classes still honours each class's own profile)
+     * -> null. null / 'auto' means "keep this template's built-in look", so a
+     * school that never touches these prints exactly as before.
+     *
+     * Motto and contact alignment FOLLOW the school-name alignment unless set
+     * explicitly, so picking "Centre" once balances the whole header.
+     *
+     * Returns inline-style strings ready to drop on the header elements. The
+     * size is passed as a CSS variable (--hdr-name-scale) rather than a
+     * font-size so the fit-school-name script (which clears inline font-size
+     * before re-measuring) can never wipe it out.
+     */
+    public static function passslipHeaderLayout(array $saved = []): array
+    {
+        $pick = function (string $key) use ($saved) {
+            return request()->has($key) ? request($key) : ($saved[$key] ?? null);
+        };
+
+        $align = function (string $key) use ($pick): ?string {
+            $v = $pick($key);
+            $v = is_string($v) ? strtolower(trim($v)) : null;
+            return in_array($v, ['left', 'center', 'right'], true) ? $v : null;
+        };
+
+        $nameAlign = $align('hdr_name_align');
+        $mottoAlign = $align('hdr_motto_align') ?? $nameAlign;
+        $detailsAlign = $align('hdr_details_align') ?? $nameAlign;
+
+        $rawScale = $pick('hdr_name_scale');
+        $scale = is_numeric($rawScale) ? round(min(1.8, max(0.8, (float) $rawScale)), 2) : null;
+
+        return [
+            'name_align' => $nameAlign,
+            'motto_align' => $mottoAlign,
+            'details_align' => $detailsAlign,
+            'name_scale' => $scale,
+            // true when the name is centred -> templates add symmetrical side
+            // slots so "centre" means centre of the PAGE, not of what's left
+            // between an unequal logo and report-no box.
+            'balanced' => $nameAlign === 'center',
+            'name_style' => trim(
+                ($nameAlign ? "text-align:{$nameAlign};" : '')
+                . ($scale !== null ? "--hdr-name-scale:{$scale};" : '')
+            ),
+            'motto_style' => $mottoAlign ? "text-align:{$mottoAlign};" : '',
+            'details_style' => $detailsAlign ? "text-align:{$detailsAlign};" : '',
+        ];
+    }
+
     /*
     |--------------------------------------------------------------------------
     | Passlip Customisation Persistence (per class)

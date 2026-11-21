@@ -68,9 +68,17 @@ var AR_WIDTH_FRACTION = 0.75; // Arabic text spans this share of the English nam
                 ar.style.display = 'block';
                 ar.style.width = w + 'px';
                 ar.style.textAlign = 'center';
-                if (window.getComputedStyle(parent).textAlign === 'center') {
+                // Follow the English name's alignment (header layout setting):
+                // centre -> auto both margins, right -> push to the right edge,
+                // left -> flush left. Falls back to the parent's own alignment
+                // for slips that don't carry the setting.
+                var align = en.style.textAlign || window.getComputedStyle(en).textAlign || window.getComputedStyle(parent).textAlign;
+                if (align === 'center') {
                     ar.style.marginLeft = 'auto';
                     ar.style.marginRight = 'auto';
+                } else if (align === 'right' || align === 'end') {
+                    ar.style.marginLeft = 'auto';
+                    ar.style.marginRight = '0';
                 }
             });
         }

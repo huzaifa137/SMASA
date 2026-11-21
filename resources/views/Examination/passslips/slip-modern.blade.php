@@ -271,6 +271,18 @@
             justify-content: flex-end;
         }
 
+        /* Header Layout: when the school name is centred and only ONE logo is
+           on, an empty slot the same width as a logo balances the other side
+           so the name sits in the middle of the page. */
+        .sch-logo-spacer {
+            width: 96px;
+            flex-shrink: 0;
+        }
+
+        .slip.md-dense .sch-logo-spacer {
+            width: 74px;
+        }
+
         .sch-logo-box {
             width: 96px;
             height: 96px;
@@ -303,7 +315,9 @@
         }
 
         .sch-name {
-            font-size: 36px;
+            /* --hdr-name-scale comes from the Header Layout setting (inline,
+               per slip). 1 = the template's own size. */
+            font-size: calc(36px * var(--hdr-name-scale, 1));
             font-weight: 900;
             letter-spacing: .03em;
             color: #111;
@@ -1139,7 +1153,7 @@
         }
 
         .slip.md-dense .sch-name {
-            font-size: 28px;
+            font-size: calc(28px * var(--hdr-name-scale, 1));
         }
 
         .slip.md-dense .sch-details {
@@ -1294,7 +1308,7 @@
                 white-space: normal;
                 overflow: visible;
                 text-overflow: clip;
-                font-size: clamp(18px, 3.5vw, 30px);
+                font-size: calc(clamp(18px, 3.5vw, 30px) * var(--hdr-name-scale, 1));
             }
         }
 
@@ -1765,7 +1779,11 @@
                      basis, so it automatically expands to fill whatever
                      space one or both logos leave behind instead of
                      leaving a blank gap. ══════════════════════════════ --}}
+                @php $hdr = Helper::passslipHeaderLayout($savedCfg); @endphp
                 <div class="sch-header">
+                    @if($hdr['balanced'] && !$cfg['logo_left'] && $cfg['logo_right'])
+                        <div class="sch-logo-spacer"></div>
+                    @endif
                     @if($cfg['logo_left'])
                         <div class="sch-logo-area">
                             <div class="sch-logo-box">
@@ -1779,14 +1797,14 @@
                     @endif
 
                     <div class="sch-center">
-                        <div class="sch-name">{{ $schoolName }}</div>
+                        <div class="sch-name" @if($hdr['name_style']) style="{{ $hdr['name_style'] }}" @endif>{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
                             <div class="sch-arabic-name">{{ $schoolNameArabic }}</div>
                         @endif
 
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))
-                            <div class="sch-details">
+                            <div class="sch-details" @if($hdr['details_style']) style="{{ $hdr['details_style'] }}" @endif>
                                 @if($schoolPhone)<span>{{ $schoolPhone }}</span>@endif
                                 @if($schoolEmail)<span> | {{ $schoolEmail }} | </span> <br> @endif
                                 @if($schoolLocation)<span> {{ $schoolLocation }}</span>@endif
@@ -1795,10 +1813,13 @@
                         @endif
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="sch-motto">MOTTO : "{{ $schoolMotto }}"</div>
+                            <div class="sch-motto" @if($hdr['motto_style']) style="{{ $hdr['motto_style'] }}" @endif>MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
                     </div>
 
+                    @if($hdr['balanced'] && $cfg['logo_left'] && !$cfg['logo_right'])
+                        <div class="sch-logo-spacer"></div>
+                    @endif
                     @if($cfg['logo_right'])
                         <div class="sch-logo-area sch-logo-area-right">
                             <div class="sch-logo-box">

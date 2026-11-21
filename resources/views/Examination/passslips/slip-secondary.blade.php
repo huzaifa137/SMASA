@@ -329,8 +329,25 @@
             text-align: right;
         }
 
+        /* Header Layout: with the name centred, an empty slot as wide as the
+           logo balances the right side so the name sits mid-page. */
+        .sch-logo-spacer {
+            width: 74px;
+            flex-shrink: 0;
+        }
+
+        .sch-motto {
+            font-size: .8rem;
+            font-style: italic;
+            font-weight: 700;
+            color: #111;
+            margin-top: 3px;
+        }
+
         .sch-name {
-            font-size: 1.45rem;
+            /* --hdr-name-scale comes from the Header Layout setting (inline,
+               per slip). 1 = the template's own size. */
+            font-size: calc(1.45rem * var(--hdr-name-scale, 1));
             font-weight: 700;
             text-transform: uppercase;
             color: #111;
@@ -853,6 +870,7 @@
         // School identity (same for every slip — one school per exam)
         $schoolPhone = Helper::schoolPhoneBySchoolID($schoolId) ?? '';
         $schoolEmail = DB::table('school_profiles')->where('school_id', $schoolId)->value('email');
+        $schoolMotto = DB::table('school_profiles')->where('school_id', $schoolId)->value('motto');
         // Same source the Primary templates use: P.O Box / location is stored in `school_type`.
         $schoolLocation = DB::table('school_profiles')->where('school_id', $schoolId)->value('school_type');
         $schoolWebsite = Helper::schoolWebsiteBySchoolID($schoolId);
@@ -916,6 +934,9 @@
                     'watermark' => $on('show_watermark', true, $savedCfg),
                     'logo' => $on('show_logo', true, $savedCfg),
                     'contact' => $on('show_contact', true, $savedCfg),
+                    // Motto is OFF by default on Secondary (it never printed one
+                    // before) — switch it on from Customise → Header.
+                    'motto' => $on('show_motto', false, $savedCfg),
                     'photo' => $on('show_photo', true, $savedCfg),
                     'minichart' => $on('show_minichart', true, $savedCfg),
                     'qr' => $on('show_qr', true, $savedCfg),
@@ -1086,6 +1107,7 @@
                 <div class="slip-body">
 
                     {{-- ══ LETTERHEAD ══ --}}
+                    @php $hdr = Helper::passslipHeaderLayout($savedCfg); @endphp
                     <div class="sch-header">
                         @if($cfg['logo'])
                             <div class="sch-logo-box">
@@ -1097,9 +1119,9 @@
                             </div>
                         @endif
                         <div class="sch-text">
-                            <div class="sch-name">{{ $schoolName }}</div>
+                            <div class="sch-name" @if($hdr['name_style']) style="{{ $hdr['name_style'] }}" @endif>{{ $schoolName }}</div>
                             @if($cfg['contact'] && ($schoolLocation || $schoolPhone || $schoolEmail || $schoolWebsite))
-                                <div class="sch-sub">
+                                <div class="sch-sub" @if($hdr['details_style']) style="{{ $hdr['details_style'] }}" @endif>
                                     @if($schoolLocation)
                                         <span class="sch-item"><i class="fas fa-location-dot"></i> {{ $schoolLocation }}</span>
                                     @endif
@@ -1114,7 +1136,13 @@
                                     @endif
                                 </div>
                             @endif
+                            @if($cfg['motto'] && $schoolMotto)
+                                <div class="sch-motto" @if($hdr['motto_style']) style="{{ $hdr['motto_style'] }}" @endif>MOTTO : "{{ $schoolMotto }}"</div>
+                            @endif
                         </div>
+                        @if($hdr['balanced'] && $cfg['logo'])
+                            <div class="sch-logo-spacer"></div>
+                        @endif
                     </div>
 
                     <div class="title-band">{{ $titleBand }}</div>

@@ -1151,7 +1151,9 @@
         }
 
         .rc-lh-name {
-            font-size: 26px;
+            /* --hdr-name-scale comes from the Header Layout setting (inline,
+               per slip). 1 = the template's own size. */
+            font-size: calc(26px * var(--hdr-name-scale, 1));
             font-weight: 900;
             letter-spacing: .02em;
             color: var(--rc-navy);
@@ -1165,6 +1167,21 @@
             overflow-wrap: anywhere;
             display: block;
             max-width: 100%;
+        }
+
+        /* Header Layout: when the school name is centred, the logo and the
+           Report No. box get the SAME width (and a spacer stands in for a
+           hidden Report No.) so the name is centred on the page, not just
+           in whatever room an unequal logo/box leaves. */
+        .rc-lh-balanced .rc-lh-logo {
+            margin: 0 9px;
+        }
+
+        .rc-lh-balanced .rc-lh-reportno,
+        .rc-lh-balanced .rc-lh-spacer {
+            flex: 0 0 96px;
+            width: 96px;
+            box-sizing: border-box;
         }
 
         .rc-lh-arabic {
@@ -2426,7 +2443,8 @@
                 @endif
 
                 {{-- ══ LETTERHEAD ═══════════════════════════════════════════════ --}}
-                <div class="rc-letterhead">
+                @php $hdr = Helper::passslipHeaderLayout($savedCfg); @endphp
+                <div class="rc-letterhead{{ $hdr['balanced'] ? ' rc-lh-balanced' : '' }}">
                     <div class="rc-lh-logo">
                         @if($cfg['logo'] && $schoolLogoUrl)
                             <img src="{{ $schoolLogoUrl }}" alt="logo">
@@ -2436,14 +2454,14 @@
                     </div>
 
                     <div class="rc-lh-center">
-                        <div class="rc-lh-name">{{ $schoolName }}</div>
+                        <div class="rc-lh-name" @if($hdr['name_style']) style="{{ $hdr['name_style'] }}" @endif>{{ $schoolName }}</div>
 
                         @if($cfg['arabic'] && $schoolNameArabic)
                             <div class="rc-lh-arabic">{{ $schoolNameArabic }}</div>
                         @endif
 
                         @if($cfg['contact'] && ($schoolPhone || $schoolEmail || $schoolLocation || $schoolWebsite))
-                            <div class="rc-lh-details">
+                            <div class="rc-lh-details" @if($hdr['details_style']) style="{{ $hdr['details_style'] }}" @endif>
                                 {{-- Wraps onto a second line only when P.O Box + phone + email +
                                 website don't fit on one (each item stays whole). --}}
                                 <div>
@@ -2479,7 +2497,7 @@
 
 
                         @if($cfg['motto'] && $schoolMotto)
-                            <div class="rc-lh-motto" style="font-size: 1rem;">MOTTO : "{{ $schoolMotto }}"</div>
+                            <div class="rc-lh-motto" style="font-size: 1rem;{{ $hdr['motto_style'] }}">MOTTO : "{{ $schoolMotto }}"</div>
                         @endif
                     </div>
 
@@ -2488,6 +2506,8 @@
                             <div class="lbl">Report No.</div>
                             <div class="val">{{ $reportNo }}</div>
                         </div>
+                    @elseif($hdr['balanced'])
+                        <div class="rc-lh-spacer"></div>
                     @endif
                 </div>
 

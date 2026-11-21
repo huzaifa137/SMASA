@@ -864,6 +864,48 @@ selected classes" is clicked. --}}
                     </p>
                 @endif
 
+                {{-- Header Layout — alignment of the school name, motto and
+                contact line, plus a size multiplier for the school name.
+                Primary Classic / Modern / Minimal and Secondary. "Template
+                default" keeps each design's own look, so nothing changes for
+                a class until someone picks a value here. Motto and contact
+                line follow the school name unless set on their own. --}}
+                @if(in_array($template, ['classic', 'modern', 'minimal', 'secondary-classic'], true))
+                    <div class="cz-group-label"><i class="fas fa-align-center"></i> Header Layout</div>
+                    @foreach([['HdrNameAlign', 'hdr_name_align', 'School name', 'Template default'], ['HdrMottoAlign', 'hdr_motto_align', 'Motto', 'Follow school name'], ['HdrDetailsAlign', 'hdr_details_align', 'Contact line', 'Follow school name']] as [$hid, $hkey, $hlbl, $hauto])
+                        @php $hcur = in_array(request($hkey), ['left', 'center', 'right'], true) ? request($hkey) : 'auto'; @endphp
+                        <div class="cz-color-row">
+                            <label for="cz{{ $hid }}">{{ $hlbl }}</label>
+                            <select id="cz{{ $hid }}" class="cz-select cz-hdr-align" data-key="{{ $hkey }}">
+                                <option value="auto" @selected($hcur === 'auto')>{{ $hauto }}</option>
+                                <option value="left" @selected($hcur === 'left')>Left</option>
+                                <option value="center" @selected($hcur === 'center')>Centre</option>
+                                <option value="right" @selected($hcur === 'right')>Right</option>
+                            </select>
+                        </div>
+                    @endforeach
+                    @php $hscale = is_numeric(request('hdr_name_scale')) ? request('hdr_name_scale') : ''; @endphp
+                    <div class="cz-size-row">
+                        <label for="czHdrScaleNum">School name size</label>
+                        <input type="range" id="czHdrScaleRange" min="0.8" max="1.8" step="0.05"
+                            value="{{ $hscale !== '' ? $hscale : 1 }}" data-default="1">
+                        <input type="number" id="czHdrScaleNum" class="cz-size-num" min="0.8" max="1.8" step="0.05"
+                            placeholder="1" value="{{ $hscale }}" data-default="1">
+                        <span class="cz-size-unit">×</span>
+                        <button type="button" class="cz-size-reset" data-target="HdrScale" title="Back to default">
+                            <i class="fas fa-rotate-left"></i>
+                        </button>
+                    </div>
+                    <button type="button" class="cz-btn-sm" id="czHdrBalance" style="margin:.2rem 0 .3rem;">
+                        <i class="fas fa-align-center"></i> Balanced header (centre all, name ×1.15)
+                    </button>
+                    <p class="cz-hint">
+                        Centre the school name, motto and contact line, and make the name a little
+                        larger. The motto and contact line follow the school name unless you set
+                        them separately. A very long name is still shrunk to fit on the page.
+                    </p>
+                @endif
+
                 {{-- ── Dynamically-filtered toggle groups ──
                 Only the sections/keys this template actually supports
                 are rendered here at all — this is the fix for the
@@ -882,7 +924,7 @@ selected classes" is clicked. --}}
                         'minimal' => ['show_section_summary', 'show_discipline', 'show_signatures', 'show_teacher_col', 'show_col_grade_point', 'show_decimals'],
                         'classic' => ['show_signatures', 'show_teacher_col', 'show_decimals'],
                         'modern' => ['show_teacher_col', 'show_col_grade_point', 'show_decimals'],
-                        'secondary-classic' => ['show_decimals', 'show_border', 'show_sum_result'],
+                        'secondary-classic' => ['show_decimals', 'show_border', 'show_sum_result', 'show_motto'],
                         default => [],
                     };
                 @endphp
@@ -1124,6 +1166,13 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 const n = document.getElementById('cz' + id + 'Num');
                 if (n && n.value !== '') settings[id === 'Lbl' ? 'lbl_size' : 'val_size'] = n.value;
             });
+            // Header Layout. 'auto' is sent explicitly so choosing "default"
+            // in the panel beats a value already saved for the class.
+            document.querySelectorAll('.cz-hdr-align').forEach(sel => {
+                settings[sel.dataset.key] = sel.value;
+            });
+            const hdrScaleEl = document.getElementById('czHdrScaleNum');
+            if (hdrScaleEl) settings.hdr_name_scale = hdrScaleEl.value !== '' ? hdrScaleEl.value : 'auto';
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 settings[cb.dataset.key] = cb.checked;
             });
@@ -1251,7 +1300,15 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
 
         document.getElementById('czPageSize').addEventListener('change', scheduleRefresh);
         // Text sizes: slider and number box stay in sync; empty number = default.
-        ['Lbl', 'Val', 'CapSize'].forEach(id => {
+        document.querySelectorAll('.cz-hdr-align').forEach(sel => sel.addEventListener('change', scheduleRefresh));
+        const hdrBalanceBtn = document.getElementById('czHdrBalance');
+        if (hdrBalanceBtn) hdrBalanceBtn.addEventListener('click', () => {
+            document.querySelectorAll('.cz-hdr-align').forEach(sel => { sel.value = 'center'; });
+            document.getElementById('czHdrScaleNum').value = '1.15';
+            document.getElementById('czHdrScaleRange').value = '1.15';
+            scheduleRefresh();
+        });
+        ['Lbl', 'Val', 'CapSize', 'HdrScale'].forEach(id => {
             const range = document.getElementById('cz' + id + 'Range');
             const num = document.getElementById('cz' + id + 'Num');
             if (!range || !num) return;
@@ -1328,6 +1385,20 @@ const LIST_URL = '{{ route('examination.passslips.settings.list', $exam->id) }}?
                 num.value = saved[key] ?? '';
                 range.value = saved[key] ?? range.dataset.default;
             });
+            // Header Layout — a saved profile without these restores to "default".
+            document.querySelectorAll('.cz-hdr-align').forEach(sel => {
+                const v = saved[sel.dataset.key];
+                sel.value = ['left', 'center', 'right'].includes(v) ? v : 'auto';
+            });
+            {
+                const hr = document.getElementById('czHdrScaleRange');
+                const hn = document.getElementById('czHdrScaleNum');
+                if (hr && hn) {
+                    const hv = isNaN(parseFloat(saved.hdr_name_scale)) ? '' : saved.hdr_name_scale;
+                    hn.value = hv;
+                    hr.value = hv !== '' ? hv : hr.dataset.default;
+                }
+            }
             document.querySelectorAll('.cz-toggle-cb').forEach(cb => {
                 const key = cb.dataset.key;
                 cb.checked = key in saved ? !!saved[key] : !OFF_BY_DEFAULT.includes(key);
