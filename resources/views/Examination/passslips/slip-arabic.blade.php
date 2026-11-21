@@ -185,15 +185,23 @@
         }
         .slip:last-of-type { page-break-after: avoid; break-after: auto; }
 
-        .frame { position: absolute; inset: 6px; border: 2.5px solid var(--ink); border-radius: 6px; pointer-events: none; }
-        .frame::before { content: ''; position: absolute; inset: 4px; border: 1px solid var(--ink); border-radius: 3px; }
-        .corner { position: absolute; width: 14px; height: 14px; background: var(--ink); transform: rotate(45deg); }
-        .corner.tl { top: 0; left: 0; margin: -8px 0 0 -8px; } .corner.tr { top: 0; right: 0; margin: -8px -8px 0 0; }
-        .corner.bl { bottom: 0; left: 0; margin: 0 0 -8px -8px; } .corner.br { bottom: 0; right: 0; margin: 0 -8px -8px 0; }
+        /* ── Professional frame ──────────────────────────────────────────────
+           Three ruled lines (thick ink / thin accent / thin ink) and a small
+           diamond at the middle of the left and right sides. Follows --ink / --accent, so it re-colours with the
+           card's accent picker. Pure CSS: prints and exports to PDF. */
+        .frame {
+            position: absolute; inset: 12px; z-index: 1; pointer-events: none;
+            color: var(--ink);
+            border: 3px solid var(--ink); border-radius: 4px;
+        }
+        .frame::before { content: ''; position: absolute; inset: 4px; border: 1px solid var(--accent); border-radius: 2px; }
+        .frame::after  { content: ''; position: absolute; inset: 8px; border: 1.5px solid var(--ink); border-radius: 1px; }
+        .mid { position: absolute; z-index: 2; width: 8px; height: 8px; background: var(--ink); border: 3px solid #fff; outline: 1px solid var(--ink); transform: rotate(45deg); }
+        .mid.l { left: -9px; top: calc(50% - 7px); } .mid.r { right: -9px; top: calc(50% - 7px); }
 
         .card {
             position: relative; height: 100%;
-            padding: 26px 30px 24px;
+            padding: 40px 44px 38px;
             display: flex; flex-direction: column; gap: 12px;
         }
 
@@ -261,7 +269,7 @@
         .stamp-in .st { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; line-height: 1; }
         .stamp-in .st.l { left: 7px; } .stamp-in .st.r { right: 7px; }
 
-        .slip, .frame, .corner, .marks th, .marks td, .stamp, .stamp-in, .rule span, .rule i, .photo {
+        .slip, .frame, .mid, .marks th, .marks td, .stamp, .stamp-in, .rule span, .rule i, .photo {
             -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
         }
 
@@ -381,8 +389,7 @@
             <div class="slip" dir="{{ $lang === 'ar' ? 'rtl' : 'ltr' }}" lang="{{ $lang }}"
                 style="--accent: {{ $accent }}; --ink: {{ $ink }};">
                 <div class="frame">
-                    <span class="corner tl"></span><span class="corner tr"></span>
-                    <span class="corner bl"></span><span class="corner br"></span>
+                    <span class="mid l"></span><span class="mid r"></span>
                 </div>
 
                 <div class="card">
