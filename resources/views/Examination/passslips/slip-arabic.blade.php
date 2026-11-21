@@ -18,9 +18,14 @@
     | The text is real HTML text shaped by the browser, so Arabic letters
     | join correctly on screen, in Print → Save as PDF and in "Download PDF".
     |
+    | The bottom of the card is fully dynamic (same data the Classic design
+    | uses): Class Teacher's / Head Teacher's remarks and signatures come from
+    | the remarks entered per student, and "This Term Ends On" / "Next Term
+    | Starts On" come from the school's term dates. Nothing is pre-printed.
+    |
     | Settings (query string wins, then the class's saved profile):
-    |   card_lang, accent, show_photo, show_stamp, show_notes, show_decimals,
-    |   arabic_digits
+    |   card_lang, accent, show_photo, show_contact, show_motto,
+    |   show_remarks, show_term_dates, show_decimals, arabic_digits
     |─────────────────────────────────────────────────────────────────────
     */
     $mode = $mode ?? 'single';
@@ -81,6 +86,14 @@
     $embed = request()->boolean('embed');
 
     $langUrl = fn(string $l) => request()->url() . '?' . http_build_query(array_merge($rawQuery, ['card_lang' => $l]));
+
+    /* Letterhead details — same sources the Classic design uses (school profile). */
+    $schoolProfile = DB::table('school_profiles')->where('school_id', $schoolId)->first();
+    $schoolPhone = trim((string) (Helper::schoolPhoneBySchoolID($schoolId) ?? ''));
+    $schoolEmail = trim((string) ($schoolProfile->email ?? ''));
+    $schoolMotto = trim((string) ($schoolProfile->motto ?? ''));
+    $schoolLocation = trim((string) ($schoolProfile->school_type ?? ''));
+    $schoolWebsite = trim((string) (Helper::schoolWebsiteBySchoolID($schoolId) ?? ''));
 
     /* School logo — same lookup order the other slips use. */
     $schoolLogo = DB::table('school_profiles')->where('school_id', $schoolId)->value('logo');
@@ -201,34 +214,41 @@
 
         .card {
             position: relative; height: 100%;
-            padding: 40px 44px 38px;
-            display: flex; flex-direction: column; gap: 12px;
+            padding: 30px 36px 28px;
+            display: flex; flex-direction: column; gap: 11px;
         }
 
         /* header */
-        .hdr { display: flex; align-items: center; gap: 18px; }
+        /* Logo always on the left, an equal invisible slot on the right, so the text block is
+           centred on the PAGE (the 'balanced header' of the Classic design, always on here). */
+        .hdr { display: flex; align-items: center; gap: 10px; direction: ltr; }
         .hdr-text { flex: 1; text-align: center; min-width: 0; }
-        .school { font-size: 27px; font-weight: 800; color: var(--ink); line-height: 1.3; overflow-wrap: anywhere; }
-        .title { font-size: 21px; font-weight: 700; color: var(--ink); margin-top: 6px; }
-        .exam-name { font-size: 12px; font-weight: 600; color: var(--accent); margin-top: 2px; }
-        .rule { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 10px auto 0; width: 75%; }
+        .hdr-logo { width: 104px; height: 104px; flex: 0 0 104px; display: flex; align-items: center; justify-content: center; }
+        .hdr-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
+        .hdr-logo.spacer { visibility: hidden; }
+        .school { font-size: calc(28px * var(--hdr-name-scale, 1.15)); font-weight: 800; color: var(--ink); line-height: 1.25; overflow-wrap: anywhere; }
+        .school2 { font-size: 18px; font-weight: 700; color: var(--accent); line-height: 1.3; margin-top: 1px; overflow-wrap: anywhere; }
+        .contact { display: flex; flex-wrap: wrap; justify-content: center; gap: 2px 16px; margin-top: 6px; font-size: 16px; font-weight: 600; color: #334155; }
+        .contact span { white-space: nowrap; }
+        .contact i { color: var(--accent); margin-inline-end: 5px; font-size: .87em; }
+        .motto { margin-top: 4px; font-size: 16px; font-style: italic; font-weight: 700; color: var(--ink); }
+        .title { font-size: 25px; font-weight: 800; color: var(--ink); margin-top: 7px; overflow-wrap: anywhere; }
+        .rule { display: flex; align-items: center; justify-content: center; gap: 8px; margin: 8px auto 0; width: 80%; }
         .rule span { flex: 1; height: 1.5px; background: var(--ink); opacity: .75; }
         .rule i { width: 9px; height: 9px; background: var(--ink); transform: rotate(45deg); display: block; }
-        .hdr-logo { width: 118px; height: 118px; flex: 0 0 118px; display: flex; align-items: center; justify-content: center; }
-        .hdr-logo img { max-width: 100%; max-height: 100%; object-fit: contain; }
 
         /* meta row */
-        .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 14px; font-weight: 700; color: var(--ink); }
+        .meta { display: flex; justify-content: space-between; gap: 12px; font-size: 17px; font-weight: 700; color: var(--ink); }
         .meta b { font-weight: 800; }
 
         /* student info */
         .info { display: flex; align-items: stretch; gap: 0; border: 1.5px solid var(--ink); border-radius: 3px; }
-        .info-fields { flex: 1; display: grid; grid-template-columns: 1.5fr 1fr 1fr; gap: 12px 22px; padding: 14px 18px; align-content: center; }
-        .fld { display: flex; align-items: baseline; gap: 7px; min-width: 0; font-size: 14px; }
+        .info-fields { flex: 1; display: grid; grid-template-columns: 1fr 1fr; gap: 14px 28px; padding: 16px 20px; align-content: center; }
+        .fld { display: flex; align-items: baseline; gap: 7px; min-width: 0; font-size: 17px; }
         .fld .k { font-weight: 800; color: var(--ink); white-space: nowrap; }
-        .fld .v { flex: 1; min-width: 0; border-bottom: 1.2px dotted #475569; padding: 0 4px; min-height: 1.5em; font-weight: 600; text-align: center; overflow-wrap: anywhere; }
+        .fld .v { flex: 1; min-width: 0; border-bottom: 1.2px dotted #475569; padding: 0 4px; min-height: 1.5em; font-weight: 600; text-align: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
         .photo-cell { flex: 0 0 auto; padding: 10px; border-inline-start: 1.5px solid var(--ink); display: flex; align-items: center; }
-        .photo { width: 92px; height: 108px; background: #e5e7eb; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+        .photo { width: 100px; height: 120px; background: #e5e7eb; border: 1px solid #cbd5e1; display: flex; align-items: center; justify-content: center; overflow: hidden; }
         .photo img { width: 100%; height: 100%; object-fit: cover; }
         .photo .ph { text-align: center; color: #94a3b8; font-size: 11px; font-weight: 800; letter-spacing: .06em; }
         .photo .ph svg { display: block; margin: 0 auto 3px; }
@@ -249,27 +269,20 @@
         .marks.d3 td { font-size: 13px; padding: 1px 6px; } .marks.d3 td.subj, .marks.d3 td.rem { font-size: 12.5px; } .marks.d3 th { font-size: 12.5px; padding: 5px 4px; }
         .col-subj { width: 24%; } .col-avg { width: 15%; } .col-obt { width: 15%; } .col-tot { width: 15%; } .col-rem { width: 31%; }
 
-        /* footer */
-        .foot { display: flex; justify-content: space-between; align-items: flex-end; gap: 22px; margin-top: 2px; }
-        .notes { flex: 1; min-width: 0; font-size: 12.5px; }
-        .notes h4 { font-size: 15px; font-weight: 800; color: var(--ink); margin-bottom: 4px; }
-        .notes ul { padding-inline-start: 18px; }
-        .notes li { margin-bottom: 3px; color: #1e293b; }
-        .notes li::marker { color: var(--ink); }
-        .date-line { margin-top: 10px; font-weight: 800; color: var(--ink); font-size: 14px; display: flex; gap: 6px; align-items: baseline; }
-        .date-line .dots { letter-spacing: 1px; font-weight: 600; color: #475569; }
-        .sign { flex: 0 0 150px; text-align: center; }
-        .sign .who { font-weight: 800; color: var(--ink); font-size: 15px; margin-top: 6px; }
-        .sign .who-name { font-size: 12px; font-weight: 600; color: #334155; }
-        .sign .sline { margin-top: 26px; border-top: 1.2px solid #475569; }
-        .stamp { width: 128px; height: 128px; margin: 0 auto; border-radius: 50%; border: 3px solid #1d4ed8; color: #1d4ed8; transform: rotate(-7deg); opacity: .92; padding: 6px; }
-        .stamp-in { width: 100%; height: 100%; border-radius: 50%; border: 1.5px solid #1d4ed8; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px; padding: 0 16px; position: relative; text-align: center; }
-        .stamp-in .sn { font-size: 10.5px; font-weight: 800; line-height: 1.25; overflow-wrap: anywhere; }
-        .stamp-in .sd { font-size: 13px; font-weight: 700; color: #dc2626; letter-spacing: .02em; }
-        .stamp-in .st { position: absolute; top: 50%; transform: translateY(-50%); font-size: 11px; line-height: 1; }
-        .stamp-in .st.l { left: 7px; } .stamp-in .st.r { right: 7px; }
+        /* footer — remarks / signatures / term dates (all dynamic) */
+        .remarks { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 2px; }
+        .rbox { border: 1.5px solid var(--ink); border-radius: 3px; display: flex; flex-direction: column; min-width: 0; }
+        .rbox .rhd { background: var(--tint); border-bottom: 1.2px solid var(--ink); padding: 6px 10px; font-size: 15px; font-weight: 800; color: var(--ink); }
+        .rbox .rhd .rn { font-weight: 600; color: #334155; }
+        .rbox .rtxt { padding: 7px 10px; min-height: 54px; font-size: 15px; font-weight: 600; color: #1e293b; line-height: 1.55; overflow-wrap: anywhere; }
+        .rbox .rtxt.none { color: #94a3b8; font-weight: 500; }
+        .rbox .rsig { display: flex; align-items: flex-end; gap: 8px; padding: 0 10px 6px; font-size: 14px; font-weight: 700; color: var(--ink); }
+        .rbox .rsig .sl { flex: 1; min-height: 24px; border-bottom: 1.2px solid #475569; display: flex; align-items: flex-end; justify-content: center; }
+        .rbox .rsig img { max-width: 110px; max-height: 26px; object-fit: contain; }
+        .dates { display: flex; justify-content: space-between; gap: 12px; border: 1.5px solid var(--ink); border-radius: 3px; padding: 8px 14px; font-size: 16px; font-weight: 700; color: var(--ink); }
+        .dates b { font-weight: 800; color: #1e293b; }
 
-        .slip, .frame, .mid, .marks th, .marks td, .stamp, .stamp-in, .rule span, .rule i, .photo {
+        .slip, .frame, .mid, .marks th, .marks td, .rbox .rhd, .rule span, .rule i, .photo {
             -webkit-print-color-adjust: exact; print-color-adjust: exact; color-adjust: exact;
         }
 
@@ -350,15 +363,25 @@
                 $ink = $hexToDark($accent);
 
                 $showPhoto = $on('show_photo', true, $saved);
-                $showStamp = $on('show_stamp', true, $saved);
-                $showNotes = $on('show_notes', true, $saved);
+                /* Header layout: honours a saved/previewed hdr_name_scale, else the balanced default (x1.15). */
+                $hdrLayout = Helper::passslipHeaderLayout($saved);
+                $nameScale = $hdrLayout['name_scale'] ?? 1.15;
+                $showContact = $on('show_contact', true, $saved);
+                $showMotto = $on('show_motto', true, $saved);
+                $showRemarks = $on('show_remarks', true, $saved);
+                $showTermDates = $on('show_term_dates', true, $saved);
 
                 $rows = collect($slipData['subjectMarks'])->values();
                 $count = $rows->count();
-                $density = $count <= 8 ? '' : ($count <= 12 ? 'd2' : 'd3');
+                $density = $count <= 7 ? '' : ($count <= 11 ? 'd2' : 'd3');
 
+                /* Main name in the card language, the other language's name (when set) underneath. */
                 $schoolName = $lang === 'ar' && $schoolNameAr !== '' ? $schoolNameAr : $schoolNameEn;
-                $stampName = $lang === 'ar' && $schoolNameAr !== '' ? $schoolNameAr : strtoupper($schoolNameEn);
+                $schoolName2 = '';
+                if ($schoolNameAr !== '' && trim((string) $schoolNameEn) !== '') {
+                    $schoolName2 = $lang === 'ar' ? $schoolNameEn : $schoolNameAr;
+                }
+                $reportTitle = trim((string) ($exam->exam_name ?? '')) !== '' ? $exam->exam_name : $L['title'];
 
                 $fullName = trim(($s->firstname ?? '') . ' ' . ($s->lastname ?? '') . ' ' . ($s->other_names ?? ''));
                 $admissionNo = $s->admission_number ?? ($s->adm_no ?? ($s->index_no ?? '—'));
@@ -383,7 +406,28 @@
                     }
                 }
 
-                $stampDate = $lang === 'ar' ? $d(now()->format('d / m / Y')) : strtoupper(now()->format('d M Y'));
+                /* Remarks + signatures: attached to the student by the controller (same source as Classic). */
+                $ctName = trim((string) ($s->class_teacher ?? ''));
+                $htName = trim((string) ($s->head_teacher ?? ''));
+                $ctRemark = trim((string) ($s->class_teacher_remark ?? ''));
+                $htRemark = trim((string) ($s->head_teacher_remark ?? ''));
+                $ctSigUrl = Helper::signatureUrl($s->class_teacher_signature ?? null);
+                $htSigUrl = Helper::signatureUrl($s->head_teacher_signature ?? null);
+
+                /* Term dates: the school's active term / the next one (Helper::passslipTermDates). */
+                $fmtDate = function ($v) use ($lang, $d) {
+                    if (empty($v)) {
+                        return null;
+                    }
+                    try {
+                        $c = \Carbon\Carbon::parse($v);
+                    } catch (\Throwable $e) {
+                        return null;
+                    }
+                    return $lang === 'ar' ? $d($c->format('d / m / Y')) : $c->format('d M Y');
+                };
+                $termEndsOn = $fmtDate($termDates['term_ends_on'] ?? null);
+                $nextTermStartsOn = $fmtDate($termDates['next_term_starts_on'] ?? null);
             @endphp
 
             <div class="slip" dir="{{ $lang === 'ar' ? 'rtl' : 'ltr' }}" lang="{{ $lang }}"
@@ -395,14 +439,31 @@
                 <div class="card">
                     {{-- header --}}
                     <div class="hdr">
-                        <div class="hdr-text">
-                            <div class="school"><bdi>{{ $schoolName }}</bdi></div>
-                            <div class="title">{{ $L['title'] }}</div>
-                            <div class="exam-name"><bdi>{{ $exam->exam_name }}</bdi></div>
+                        @if($schoolLogoUrl)
+                            <div class="hdr-logo"><img src="{{ $schoolLogoUrl }}" alt="" crossorigin="anonymous"></div>
+                        @endif
+                        <div class="hdr-text" dir="{{ $lang === 'ar' ? 'rtl' : 'ltr' }}">
+                            <div class="school" style="--hdr-name-scale: {{ $nameScale }};"><bdi>{{ $schoolName }}</bdi></div>
+                            @if($schoolName2 !== '')
+                                <div class="school2"><bdi>{{ $schoolName2 }}</bdi></div>
+                            @endif
+                            @if($showContact && ($schoolLocation !== '' || $schoolPhone !== '' || $schoolEmail !== '' || $schoolWebsite !== ''))
+                                <div class="contact">
+                                    @if($schoolLocation !== '')<span><i class="fas fa-location-dot"></i><bdi>{{ $schoolLocation }}</bdi></span>@endif
+                                    @if($schoolPhone !== '')<span><i class="fas fa-phone"></i><bdi dir="ltr">{{ $schoolPhone }}</bdi></span>@endif
+                                    @if($schoolEmail !== '')<span><i class="fas fa-envelope"></i><bdi dir="ltr">{{ $schoolEmail }}</bdi></span>@endif
+                                    @if($schoolWebsite !== '')<span><i class="fas fa-globe"></i><bdi dir="ltr">{{ $schoolWebsite }}</bdi></span>@endif
+                                </div>
+                            @endif
+                            @if($showMotto && $schoolMotto !== '')
+                                <div class="motto">{{ $L['motto'] }} : "<bdi>{{ $schoolMotto }}</bdi>"</div>
+                            @endif
+                            {{-- The title is the report / examination name itself --}}
+                            <div class="title"><bdi>{{ $reportTitle }}</bdi></div>
                             <div class="rule"><span></span><i></i><span></span></div>
                         </div>
                         @if($schoolLogoUrl)
-                            <div class="hdr-logo"><img src="{{ $schoolLogoUrl }}" alt="" crossorigin="anonymous"></div>
+                            <div class="hdr-logo spacer" aria-hidden="true"></div>
                         @endif
                     </div>
 
@@ -481,40 +542,29 @@
                         </table>
                     </div>
 
-                    {{-- notes / stamp / signature --}}
-                    <div class="foot">
-                        <div class="notes">
-                            @if($showNotes)
-                                <h4>{{ $L['note'] }} :</h4>
-                                <ul>
-                                    <li>{{ $L['note_1'] }}</li>
-                                    <li>{{ $L['note_2'] }}</li>
-                                    <li>{{ $L['note_3'] }}</li>
-                                </ul>
-                            @endif
-                            <div class="date-line">
-                                <span>{{ $L['date'] }} :</span>
-                                <span class="dots">.....</span> / <span class="dots">.....</span> / <span>{{ $d($exam->academic_year) }}</span>
+                    {{-- class teacher / head teacher remarks + signatures --}}
+                    @if($showRemarks)
+                        <div class="remarks">
+                            <div class="rbox">
+                                <div class="rhd">{{ $L['class_teacher_remarks'] }}@if($ctName !== '') <span class="rn">- <bdi>{{ $ctName }}</bdi></span>@endif</div>
+                                <div class="rtxt {{ $ctRemark === '' ? 'none' : '' }}" dir="auto">{{ $ctRemark !== '' ? $ctRemark : $L['no_remarks'] }}</div>
+                                <div class="rsig"><span>{{ $L['signature'] }} :</span><span class="sl">@if($ctSigUrl)<img src="{{ $ctSigUrl }}" alt="" crossorigin="anonymous">@endif</span></div>
+                            </div>
+                            <div class="rbox">
+                                <div class="rhd">{{ $L['head_teacher_remarks'] }}@if($htName !== '') <span class="rn">- <bdi>{{ $htName }}</bdi></span>@endif</div>
+                                <div class="rtxt {{ $htRemark === '' ? 'none' : '' }}" dir="auto">{{ $htRemark !== '' ? $htRemark : $L['no_remarks'] }}</div>
+                                <div class="rsig"><span>{{ $L['signature'] }} :</span><span class="sl">@if($htSigUrl)<img src="{{ $htSigUrl }}" alt="" crossorigin="anonymous">@endif</span></div>
                             </div>
                         </div>
-                        <div class="sign">
-                            @if($showStamp)
-                                <div class="stamp">
-                                    <div class="stamp-in">
-                                        <span class="st l">★</span><span class="st r">★</span>
-                                        <div class="sn"><bdi>{{ $stampName }}</bdi></div>
-                                        <div class="sd">{{ $stampDate }}</div>
-                                    </div>
-                                </div>
-                            @else
-                                <div class="sline"></div>
-                            @endif
-                            <div class="who">{{ $L['director'] }}</div>
-                            @if(!empty($s->head_teacher))
-                                <div class="who-name"><bdi>{{ $s->head_teacher }}</bdi></div>
-                            @endif
+                    @endif
+
+                    {{-- term dates --}}
+                    @if($showTermDates && ($termEndsOn || $nextTermStartsOn))
+                        <div class="dates">
+                            <div>{{ $L['term_ends_on'] }} : <b><bdi>{{ $termEndsOn ?? '—' }}</bdi></b></div>
+                            <div>{{ $L['next_term_starts_on'] }} : <b><bdi>{{ $nextTermStartsOn ?? '—' }}</bdi></b></div>
                         </div>
-                    </div>
+                    @endif
                 </div>
             </div>
         @endforeach
@@ -551,6 +601,66 @@
                 setTimeout(start, 150);
             });
         }
+
+        /* Keep a long school name on one line: shrink it (never below 70 %) until it fits. */
+        function fitSchoolNames() {
+            document.querySelectorAll('.school').forEach(function (el) {
+                el.style.fontSize = '';
+                var size = parseFloat(getComputedStyle(el).fontSize);
+                var min = size * 0.7;
+                while (el.getBoundingClientRect().height > size * 1.6 && size > min) {
+                    size -= 1;
+                    el.style.fontSize = size + 'px';
+                }
+            });
+        }
+
+        /* Contact line: keep location + phone + email (+ website) on ONE line whenever they can fit by
+           shrinking the text a little (never below 13px). If they still can't, put it back to the normal
+           size and let it wrap onto a second line as before. */
+        function fitContactLines() {
+            document.querySelectorAll('.contact').forEach(function (el) {
+                var items = Array.prototype.slice.call(el.children);
+                if (items.length < 2) { return; }
+                el.style.fontSize = '';
+                el.style.columnGap = '';
+                var base = parseFloat(getComputedStyle(el).fontSize);
+                var baseGap = parseFloat(getComputedStyle(el).columnGap) || 20;
+                var wrapped = function () {
+                    var top = items[0].offsetTop;
+                    return items.some(function (i) { return Math.abs(i.offsetTop - top) > 2; });
+                };
+                if (!wrapped()) { return; }
+                var size = base;
+                while (wrapped() && size > 13) {
+                    size -= 0.5;
+                    el.style.fontSize = size + 'px';
+                    el.style.columnGap = Math.max(8, baseGap * size / base) + 'px';
+                }
+                if (wrapped()) {
+                    el.style.fontSize = '';
+                    el.style.columnGap = '';
+                }
+            });
+        }
+
+        /* Student info values (Name, Class, ...) always stay on ONE line: when the text is wider than its
+           slot the font is reduced until it fits (down to 9px; beyond that it is cut with an ellipsis). */
+        function fitInfoFields() {
+            document.querySelectorAll('.info-fields .v').forEach(function (el) {
+                el.style.fontSize = '';
+                var size = parseFloat(getComputedStyle(el).fontSize);
+                while (el.scrollWidth > el.clientWidth + 1 && size > 9) {
+                    size -= 0.5;
+                    el.style.fontSize = size + 'px';
+                }
+            });
+        }
+
+        function fitHeader() { fitSchoolNames(); fitContactLines(); fitInfoFields(); }
+        window.addEventListener('beforeprint', fitHeader);
+        (document.fonts && document.fonts.ready ? document.fonts.ready : Promise.resolve()).then(fitHeader);
+        window.addEventListener('load', fitHeader);
 
         @if($autoPrint)
             window.addEventListener('load', function () {

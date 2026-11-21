@@ -44,9 +44,6 @@
             Report Cards (one student, a class, or all classes) — no separate button.
         </p>
 
-        @if(session('success'))
-            <div class="alert alert-success">{{ session('success') }}</div>
-        @endif
         @if($errors->any())
             <div class="alert alert-danger">@foreach($errors->all() as $e)<div>{{ $e }}</div>@endforeach</div>
         @endif
@@ -87,8 +84,10 @@
                     <h6 class="mt-4">Look</h6>
                     <div class="ar-opt"><span>Accent colour</span><input type="color" name="accent" id="arAccent" value="{{ $shared['accent'] ?? '#2f63b8' }}"></div>
                     <div class="ar-opt"><span>Student photo</span><input type="checkbox" name="show_photo" value="1" id="arPhoto" {{ ($shared['show_photo'] ?? true) ? 'checked' : '' }}></div>
-                    <div class="ar-opt"><span>School stamp</span><input type="checkbox" name="show_stamp" value="1" id="arStamp" {{ ($shared['show_stamp'] ?? true) ? 'checked' : '' }}></div>
-                    <div class="ar-opt"><span>Notes for parents</span><input type="checkbox" name="show_notes" value="1" id="arNotes" {{ ($shared['show_notes'] ?? true) ? 'checked' : '' }}></div>
+                    <div class="ar-opt"><span>Location, phone &amp; email in header</span><input type="checkbox" name="show_contact" value="1" id="arContact" {{ ($shared['show_contact'] ?? true) ? 'checked' : '' }}></div>
+                    <div class="ar-opt"><span>School motto</span><input type="checkbox" name="show_motto" value="1" id="arMotto" {{ ($shared['show_motto'] ?? true) ? 'checked' : '' }}></div>
+                    <div class="ar-opt"><span>Class / Head Teacher remarks &amp; signatures</span><input type="checkbox" name="show_remarks" value="1" id="arRemarks" {{ ($shared['show_remarks'] ?? true) ? 'checked' : '' }}></div>
+                    <div class="ar-opt"><span>Term ends / next term starts</span><input type="checkbox" name="show_term_dates" value="1" id="arTermDates" {{ ($shared['show_term_dates'] ?? true) ? 'checked' : '' }}></div>
                     <div class="ar-opt"><span>Arabic digits (٠١٢٣) in Arabic</span><input type="checkbox" name="arabic_digits" value="1" id="arDigits" {{ ($shared['arabic_digits'] ?? true) ? 'checked' : '' }}></div>
 
                     <button type="submit" class="ar-save">Save Arabic report card for the ticked classes</button>
@@ -118,6 +117,49 @@
         @endif
     </div> </div> </div> </div>
 
+    {{-- Save confirmation: SweetAlert toast (top-right) instead of an inline alert bar.
+         The layout covers the page with a white full-screen #global-loader (z-index 50000) until
+         everything - including the preview iframe - has loaded, and a toast fired earlier is hidden
+         behind it and times out unseen. So wait until that loader is gone before showing it. --}}
+    @if(session('success'))
+        <script>
+            (function () {
+                var message = @json(session('success'));
+
+                function loaderGone() {
+                    var l = document.getElementById('global-loader');
+                    return !l || getComputedStyle(l).display === 'none' || parseFloat(getComputedStyle(l).opacity) < 0.05;
+                }
+
+                function show() {
+                    if (!window.Swal) { return; }
+                    Swal.mixin({
+                        toast: true,
+                        position: 'top-end',
+                        showConfirmButton: false,
+                        timer: 4000,
+                        timerProgressBar: true,
+                        didOpen: function (t) {
+                            t.addEventListener('mouseenter', Swal.stopTimer);
+                            t.addEventListener('mouseleave', Swal.resumeTimer);
+                        }
+                    }).fire({ icon: 'success', title: message });
+                }
+
+                function whenReady() {
+                    var tries = 0;
+                    var t = setInterval(function () {
+                        tries++;
+                        if (loaderGone() || tries > 100) { clearInterval(t); show(); }
+                    }, 100);
+                }
+
+                if (document.readyState === 'complete') { whenReady(); }
+                else { window.addEventListener('load', whenReady); }
+            })();
+        </script>
+    @endif
+
     <script>
         (function () {
             var PREVIEW = @json($previewUrl);
@@ -139,8 +181,10 @@
                     card_lang: lang,
                     accent: document.getElementById('arAccent').value,
                     show_photo: flag('arPhoto'),
-                    show_stamp: flag('arStamp'),
-                    show_notes: flag('arNotes'),
+                    show_contact: flag('arContact'),
+                    show_motto: flag('arMotto'),
+                    show_remarks: flag('arRemarks'),
+                    show_term_dates: flag('arTermDates'),
                     arabic_digits: flag('arDigits')
                 });
                 frame.src = PREVIEW + '?' + q.toString();
@@ -153,7 +197,7 @@
                 this.querySelectorAll('button').forEach(function (x) { x.classList.toggle('active', x === b); });
                 refresh();
             });
-            ['arPrevClass', 'arAccent', 'arPhoto', 'arStamp', 'arNotes', 'arDigits'].forEach(function (id) {
+            ['arPrevClass', 'arAccent', 'arPhoto', 'arContact', 'arMotto', 'arRemarks', 'arTermDates', 'arDigits'].forEach(function (id) {
                 document.getElementById(id).addEventListener('change', refresh);
             });
 

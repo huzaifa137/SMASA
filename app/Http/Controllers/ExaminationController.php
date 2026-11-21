@@ -3058,8 +3058,10 @@ class ExaminationController extends Controller
                 'card_lang' => ArabicReportCard::lang($request->input("langs.$classId")),
                 'accent' => $request->input('accent') ?: '#2f63b8',
                 'show_photo' => $request->boolean('show_photo'),
-                'show_stamp' => $request->boolean('show_stamp'),
-                'show_notes' => $request->boolean('show_notes'),
+                'show_contact' => $request->boolean('show_contact'),
+                'show_motto' => $request->boolean('show_motto'),
+                'show_remarks' => $request->boolean('show_remarks'),
+                'show_term_dates' => $request->boolean('show_term_dates'),
                 'arabic_digits' => $request->boolean('arabic_digits'),
             ]);
         }
